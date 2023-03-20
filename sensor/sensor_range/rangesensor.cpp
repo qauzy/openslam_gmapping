@@ -18,6 +18,7 @@ RangeSensor::RangeSensor(std::string name, unsigned int beams_num, double res, c
 	newFormat=0;
 	updateBeamsLookup();
 }
+// 用于更新扫描光束属性，只是根据光束的位置和方位角计算了正余弦值。
 
 void RangeSensor::updateBeamsLookup(){
 	for (unsigned int i=0; i<m_beams.size(); i++){

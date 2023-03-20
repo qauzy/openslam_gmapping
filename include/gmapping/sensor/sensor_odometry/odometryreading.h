@@ -20,6 +20,7 @@ class SENSOR_ODOMETRY_EXPORT OdometryReading: public SensorReading{
 		inline void setAcceleration(const OrientedPoint& acceleration) {m_acceleration=acceleration;}
 		
 	protected:
+	// 用三个成员变量m_pose, m_speed和m_acceleration记录了机器人的位姿、速度和加速度
 		OrientedPoint m_pose;
 		OrientedPoint m_speed;
 		OrientedPoint m_acceleration;

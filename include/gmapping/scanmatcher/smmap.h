@@ -6,7 +6,7 @@
 #define SIGHT_INC 1
 
 namespace GMapping {
-
+//    地图单元类型为PointAccumulator
 struct PointAccumulator{
 	typedef point<float> FloatPoint;
 	/* before 
@@ -22,19 +22,22 @@ struct PointAccumulator{
 	inline void add(const PointAccumulator& p) {acc=acc+p.acc; n+=p.n; visits+=p.visits; }
 	static const PointAccumulator& Unknown();
 	static PointAccumulator* unknown_ptr;
+//    成员变量acc用于累积点坐标
 	FloatPoint acc;
+//    变量n和visits分别用于记录累积的次数和访问的次数
 	int n, visits;
 	inline double entropy() const;
 };
-
+//    存储结构为HierachicalArray2D<PointAccumulator>
 void PointAccumulator::update(bool value, const Point& p){
+        //如果点的访问次数大于0,则更新点的访问次数
 	if (value) {
-		acc.x+= static_cast<float>(p.x);
-		acc.y+= static_cast<float>(p.y); 
-		n++; 
-		visits+=SIGHT_INC;
+		acc.x+= static_cast<float>(p.x); //更新点的x坐标
+		acc.y+= static_cast<float>(p.y); //更新点的y坐标
+		n++;                             //更新点的访问次数
+		visits+=SIGHT_INC;               //更新点的访问次数的总和  SIGHT_INC是一个访问次数,默认值为1
 	} else
-		visits++;
+		visits++;                       //更新点的访问次数的总和  SIGHT_INC是一个访问次数,默认值为1
 }
 
 double PointAccumulator::entropy() const{

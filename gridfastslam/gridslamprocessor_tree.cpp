@@ -241,6 +241,7 @@ double GridSlamProcessor::propagateWeights(){
 	double aw=0;                   
 
 	std::vector<double>::iterator w=m_weights.begin();
+    //使用运动模型来写入reading的状态和更新所有的粒子
 	for (ParticleVector::iterator it=m_particles.begin(); it!=m_particles.end(); it++){
 		double weight=*w;
 		aw+=weight;

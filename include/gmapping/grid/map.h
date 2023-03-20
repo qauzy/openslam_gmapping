@@ -84,7 +84,12 @@ class Map{
 	        Map<double, DoubleArray2D, false>* toDoubleMap() const;
 		
 	protected:
+		// m_center描述的是地图的中心位置，或者说是物理世界的原点，其类型为Point
 		Point m_center;
+		// m_worldSizeX, m_worldSizeY是所描述的物理世界尺寸，m_delta则是地图的缩放比例关系。m_mapSizeX和m_mapSizeY是栅格地图的大小，
+		// 它们与世界尺寸之间的关系如下面两个公式所示。 m_sizeX2和m_sizeY2是两个辅助信息，分别是m_mapSizeX和m_mapSizeY的一半。
+		// 		m_worldSizeX=m_mapSizeX∗m_delta
+		// 		m_worldSizeY=m_mapSizeY∗m_delta
 		double m_worldSizeX, m_worldSizeY, m_delta;
 		Storage m_storage;
 		int m_mapSizeX, m_mapSizeY;

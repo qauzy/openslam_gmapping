@@ -6,7 +6,18 @@
 #include "gmapping/grid/array2d.h"
 
 namespace GMapping {
+//    在HierarchicalArray2D中把地图分为若干个patch，其拆分的粒度由m_patchMagnitude来描述。
+//    在cell函数中首先通过成员函数patchIndexes计算给定的坐标所属的patch的索引。 在patchIndexes
+//    函数中将给定的坐标值右移了m_patchMagnitude位，这相当于除以了2n。在计算机中除法的计算是很慢的，
+//    所以这里通过移位的方式替代除法操作， 但是这一技巧只能用于整型的数据，对于浮点数不适用。
 
+//    Array2D是一个二维数组，HierarchicalArray2D是一个Array2D的二维数组。 相当于将地图先分割成
+//    分辨率比较低的网格，只有当粒子运动到该网格时，才真正分配这个网格的内存。 网格的内存对应着分辨率
+//    高的真实的地图，用PointAccumulator来进行计数，记录激光是否通过该点，从而判断改点的状态：占据、
+//    空闲、未知。
+//    -1 代表栅格状态未知
+//    0 代表栅格是空闲的，代表可通过区域
+//    100 代表栅格是占用的，代表障碍物，不可通过
 template <class Cell>
 class HierarchicalArray2D: public Array2D<autoptr< Array2D<Cell> > >{
 	public:

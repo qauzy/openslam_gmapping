@@ -13,8 +13,23 @@ inline void GridSlamProcessor::scanMatch(const double* plainReading){
   for (ParticleVector::iterator it=m_particles.begin(); it!=m_particles.end(); it++){
     OrientedPoint corrected;
     double score, l, s;
+    /* 计算最优的粒子
+    optimize 调用了 score 这个函数 （计算粒子得分）
+    在score 函数里，首先计算障碍物的坐标phit，然后将phit转换成网格坐标iPhit
+    计算光束上与障碍物相邻的非障碍物网格坐标pfree,pfrree由phit沿激光束方向移动一个网格的距离得到，将pfree转换成网格坐标ipfree（增量，并不是实际值）
+    在iphit 及其附近8个（m_kernelSize:default=1）栅格（pr,对应自由栅格为pf）搜索最优可能是障碍物的栅格。
+    最优准则： pr 大于某一阈值，pf小于该阈值，且pr栅格的phit的平均坐标与phit的距离bestMu最小。
+    得分计算： s +=exp(-1.0/m_gaussianSigma*bestMu*besMu)  参考NDT算法,距离越大，分数越小，分数的较大值集中在距离最小值处，符合正态分布模型
+    至此 score 函数结束并返回粒子（currentPose）得分，然后回到optimize函数
+    optimize 干的事就是 currentPose 的位姿进行微调，前、后、左、右、左转、右转 共6次，然后选取得分最高的位姿，返回最终的得分
+    */
+//
+//   optomize的中心思想就是给一个初始位姿结合激光数据和地图求出最优位姿。由于这个初始位姿可能不够准确，但是我们要怎么找倒较准确的位姿（最优位姿）呢？
+//   在初始位姿的基础上，我们给他的x,y,thelta方向上依次给一个增量，计算每一次的位姿得分（得分表示在该位姿下激光束和地图的匹配程度），看看是不是比不
+//   给增量之前得分高，得分高意味着位姿更准确了。这样迭代求出最优位姿。
     score=m_matcher.optimize(corrected, it->map, it->pose, plainReading);
     //    it->pose=corrected;
+    //判断得分是否符合要求
     if (score>m_minimumScore){
       it->pose=corrected;
     } else {
@@ -24,12 +39,20 @@ inline void GridSlamProcessor::scanMatch(const double* plainReading){
 	  m_infoStream << "op:" << m_odoPose.x << " " << m_odoPose.y << " "<< m_odoPose.theta <<std::endl;
 	}
     }
-
+    /*   likelihoodAndSocre 作用是计算粒子的权重和（l），如果出现匹配失败，则 l=noHit     */
+    //粒子的最优位姿计算了之后，重新计算粒子的权重(相当于粒子滤波器中的观测步骤，计算p(z|x,m))，粒子的权重由粒子的似然来表示。
+    //后续会根据粒子的权重进行重采样。
     m_matcher.likelihoodAndScore(s, l, it->map, it->pose, plainReading);
     sumScore+=score;
     it->weight+=l;
     it->weightSum+=l;
 
+    /* 计算可活动区域
+    computeActiveArea 用于计算每个粒子相应的位姿所扫描到的区域
+    计算过程首先考虑了每个粒子的扫描范围会不会超过子地图的大小，如果会，则resize地图的大小
+    然后定义了一个activeArea 用于设置可活动区域，调用了gridLine() 函数,这个函数如何实现的，
+    请参考百度文库那篇介绍。
+    */
     //set up the selective copy of the active area
     //by detaching the areas that will be updated
     m_matcher.invalidateActiveArea();

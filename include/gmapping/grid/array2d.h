@@ -39,7 +39,10 @@ template<class Cell, const bool debug=false> class Array2D{
 		int m_xsize, m_ysize;
 };
 
-
+//    第6到第8行中的申请内存构建m_cells的过程。在此过程中首先构建了一个有m_xsize个指针的数组，
+//    用m_cells指向其起始地址。 然后创建m_xsize个大小为m_ysize的Cell数组，分别用m_cells
+//    所指的指针数组中的各个指针指引。如此，给定x-y索引，我们就可以像下面右边的代码那样通过类似
+//    m_cells[x][y]的形式访问二维数组中的元素。
 template <class Cell, const bool debug>
 Array2D<Cell,debug>::Array2D(int xsize, int ysize){
 //	assert(xsize>0);
