@@ -48,14 +48,14 @@ namespace GMapping {
        @param parent:    the parent node in the tree
        @param childs:    the number of childs
       */
-      TNode(const OrientedPoint& pose, double weight, TNode* parent=0, unsigned int childs=0);
+      TNode(const OrientedPoint& pose, double weight, TNode* parent=0, unsigned int childs=0);//构造轨迹树的node,参数包括机器人坐标pose，以及父节点parent
 
       /**Destroys a tree node, and consistently updates the tree. If a node whose parent has only one child is deleted,
        also the parent node is deleted. This because the parent will not be reacheable anymore in the trajectory tree.*/
-      ~TNode();
+      ~TNode();//析构函数，释放父节点parent,如果一个有父节点被删除了，并且这个父母只有这一个节点，那么父母节点也删除，因为在策略树种们不会再有任何能抵达父母的可能性。
 
       /**The pose of the robot*/
-      OrientedPoint pose; 
+      OrientedPoint pose;  //机器人的坐标
       
       /**The weight of the particle*/
       double weight;
@@ -70,7 +70,7 @@ namespace GMapping {
       TNode* parent;
 
       /**The range reading to which this node is associated*/
-      const RangeReading* reading;
+      const RangeReading* reading; // 读取的距离数据  这个是一个指针，指向一个距离数据  
 
       /**The number of childs*/
       unsigned int childs;
@@ -85,7 +85,10 @@ namespace GMapping {
     typedef std::vector<GridSlamProcessor::TNode*> TNodeVector;
     typedef std::deque<GridSlamProcessor::TNode*> TNodeDeque;
     
+    
     /**This class defines a particle of the filter. Each particle has a map, a pose, a weight and retains the current node in the trajectory tree*/
+
+    //粒子结构体    定义滤波器的粒子，每一个粒子有一个地图，一个位姿，一个权重，一个节点，一个权重总和
     struct Particle{
       /**constructs a particle, given a map
 	 @param map: the particle map
@@ -99,20 +102,20 @@ namespace GMapping {
       /** sets the weight of a particle
 	  @param w the weight
       */
-      inline void setWeight(double w) {weight=w;}
+      inline void setWeight(double w) {weight=w;}//设置粒子权重，目前不懂这个函数的作用     现在懂了，在采样粒子后，需要设置粒子的权重为0
       /** The map */
-      ScanMatcherMap map;
+      ScanMatcherMap map;// 定义栅格地图的成员对象map
       /** The pose of the robot */
-      OrientedPoint pose;
+      OrientedPoint pose;//定义粒子的位姿，这个位姿是机器人的位姿，而不是地图的位姿
 
       /** The pose of the robot at the previous time frame (used for computing thr odometry displacements) */
       OrientedPoint previousPose;
 
       /** The weight of the particle */
-      double weight;
+      double weight; //粒子的权重
 
       /** The cumulative weight of the particle */
-      double weightSum;
+      double weightSum; //粒子的权重总和
 
       double gweight;
 
@@ -120,7 +123,10 @@ namespace GMapping {
       int previousIndex;
 
       /** Entry to the trajectory tree */
-      TNode* node; 
+      TNode* node; //指向轨迹树中的一个叶子节点，表示当前粒子的最新的姿态
+                        //通过该指针所指的TNode对象，我们可以追述到轨迹树的根节点上， 
+                        //期间所经历的节点就是当前粒子所记录的一种可能的运动轨迹。
+
     };
 	
     

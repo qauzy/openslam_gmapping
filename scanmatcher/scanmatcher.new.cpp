@@ -148,17 +148,29 @@ void ScanMatcher::registerScan(ScanMatcherMap& map, const OrientedPoint& p, cons
 		}
 }
 
-
+//中心思想就是给一个初始位姿结合激光数据和地图求出最优位姿；
+// 但是这个初始位姿可能不够准确，但是我们要怎么找倒较准确的
+// 位姿（最优位姿）呢？-----方法就是在初始位姿的基础上，我
+// 们给他的x,y,thelta方向上依次给一个增量，给一次我们就计
+// 算一次位姿得分（得分表示在该位姿下激光束和地图的匹配程度），
+// 看看是不是比不给增量之前得分高，得分高意味着位姿更准确了；
+// 就这样迭代求出最优位姿。
 
 double ScanMatcher::optimize(OrientedPoint& pnew, const ScanMatcherMap& map, const OrientedPoint& init, const double* readings) const{
 	double bestScore=-1;
+    /*计算当前位置的得分*/
 	OrientedPoint currentPose=init;
 	double currentScore=score(map, currentPose, readings);
+
+    /*所有时的步进增量*/
 	double adelta=m_optAngularDelta, ldelta=m_optLinearDelta;
+    /*精确搜索的次数*/
 	unsigned int refinement=0;
+    /*搜索的方向*/
 	enum Move{Front, Back, Left, Right, TurnLeft, TurnRight, Done};
 	int c_iterations=0;
 	do{
+        /*如果这一次(currentScore)算出来比上一次(bestScore)差，则有可能是走太多了，要减少搜索步长 这个策略跟LM有点像*/
 		if (bestScore>=currentScore){
 			refinement++;
 			adelta*=.5;
@@ -169,7 +181,9 @@ double ScanMatcher::optimize(OrientedPoint& pnew, const ScanMatcherMap& map, con
 //		cout <<  "pose=" << currentPose.x  << " " << currentPose.y << " " << currentPose.theta << endl;
 		OrientedPoint bestLocalPose=currentPose;
 		OrientedPoint localPose=currentPose;
+        //对其中一个粒子所对应的currentPose 的位姿进行微调，前、后、左、右、左转、右转 共6次
 
+        /*把6个方向都搜索一次  得到这6个方向里面最好的一个位姿和对应的得分*/
 		Move move=Front;
 		do {
 			localPose=currentPose;
@@ -201,12 +215,15 @@ double ScanMatcher::optimize(OrientedPoint& pnew, const ScanMatcherMap& map, con
 				default:;
 			}
 			double localScore=score(map, localPose, readings);
+			/*如果得分更好，则更新*/
 			if (localScore>currentScore){
 				currentScore=localScore;
 				bestLocalPose=localPose;
 			}
 			c_iterations++;
 		} while(move!=Done);
+
+		/* 把当前位置设置为目前最优的位置  如果6个值都被差了的话，那么这个值不会更新*/
 		currentPose=bestLocalPose;
 		//cout << __func__ << "currentScore=" << currentScore<< endl;
 		//here we look for the best move;

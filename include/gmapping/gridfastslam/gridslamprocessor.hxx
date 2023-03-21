@@ -6,6 +6,9 @@
 
 /**Just scan match every single particle.
 If the scan matching fails, the particle gets a default likelihood.*/
+
+//scanMatch()函数采用NDT算法对当前坐标的激光束和每个粒子各自维护的map进行匹配，对粒子坐标进行前后左右左转右转微调，再给出匹配得分
+//以传感器的数据作为输入，在函数体中遍历建图引擎的粒子集合
 inline void GridSlamProcessor::scanMatch(const double* plainReading){
   // sample a new pose from each scan in the reference
   
@@ -23,13 +26,25 @@ inline void GridSlamProcessor::scanMatch(const double* plainReading){
     至此 score 函数结束并返回粒子（currentPose）得分，然后回到optimize函数
     optimize 干的事就是 currentPose 的位姿进行微调，前、后、左、右、左转、右转 共6次，然后选取得分最高的位姿，返回最终的得分
     */
-//
-//   optomize的中心思想就是给一个初始位姿结合激光数据和地图求出最优位姿。由于这个初始位姿可能不够准确，但是我们要怎么找倒较准确的位姿（最优位姿）呢？
-//   在初始位姿的基础上，我们给他的x,y,thelta方向上依次给一个增量，计算每一次的位姿得分（得分表示在该位姿下激光束和地图的匹配程度），看看是不是比不
-//   给增量之前得分高，得分高意味着位姿更准确了。这样迭代求出最优位姿。
-    score=m_matcher.optimize(corrected, it->map, it->pose, plainReading);
+    //
+    //   optomize的中心思想就是给一个初始位姿结合激光数据和地图求出最优位姿。由于这个初始位姿可能不够准确，但是我们要怎么找倒较准确的位姿（最优位姿）呢？
+    //   在初始位姿的基础上，我们给他的x,y,thelta方向上依次给一个增量，计算每一次的位姿得分（得分表示在该位姿下激光束和地图的匹配程度），看看是不是比不
+    //   给增量之前得分高，得分高意味着位姿更准确了。这样迭代求出最优位姿。
+
+    //optimize 函数返回了bestScore，同时计算了corrected，即新位姿
+
+
+    /*
+    匹配器的函数optimize是一种爬山算法,用于寻找x^(i)t=argmaxxp(x|m(i)t−1,zt,x′(i)t)，完成对建议分布的采样
+    其中corrected是一个引用方式的传参，该函数最终退出之后，corrected所记录的则是x^(i)t。 
+    此外，该函数返回的是一个匹配度，记录在局部变量score中。建图引擎的成员变量m_minimumScore是一个匹配度阈值，当超过该阈值时，我们认为匹配成功，使用x^(i)t作为更新样本。 
+    否则，我们仍然使用传统的运动模型下的预测状态作为更新样本
+    */
+
+    score=m_matcher.optimize(corrected, it->map, it->pose, plainReading); 
     //    it->pose=corrected;
     //判断得分是否符合要求
+    //当计算出的分数比较靠谱后，就用corrected值更新当前粒子的位姿
     if (score>m_minimumScore){
       it->pose=corrected;
     } else {

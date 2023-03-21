@@ -344,9 +344,13 @@ namespace GMapping {
             OrientedPoint &pose(it->pose); //获取粒子的位姿
 
             //drawFromMotion()函数将所有粒子在odom坐标的基础上加入高斯白噪声，即所谓的放狗过程
-            //m_particles[i].pose是上一时刻粒子的位姿，relPose则是里程计记录的最新位姿，而m_odoPose则是建图引擎记录的上一时刻的位姿。
+            //m_particles[i].pose是上一时刻粒子的位姿，relPose则是里程计(应该是激光雷达)记录的最新位姿，而m_odoPose则是建图引擎记录的上一时刻的位姿。
             //遍历每个粒子，调用该函数之后，就完成了对各个粒子的位姿预估。
-            pose = m_motionModel.drawFromMotion(it->pose, relPose, m_odoPose);
+
+            //这里的MotionModel是一个十分粗糙的运动模型，只是简单的矢量加减运算。 相比于《Probabilistic Robotics》中提到的速度模型和里程计模型而言，
+            // 有很多方面都没有考虑，精度上可能有折扣。 但是计算简单，计算量小。有时为了提高系统的实时性，这种以牺牲精度来换取计算效率的方式是很常用的手段。
+            // 模型不必十分精确，够用就行。
+            pose = m_motionModel.drawFromMotion(it->pose, relPose, m_odoPose); //------->得到粒子新的位姿
         }
 
         // update the output file
